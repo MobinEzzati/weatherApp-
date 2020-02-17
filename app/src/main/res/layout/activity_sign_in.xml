@@ -4,14 +4,15 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FFFFFF"
+    android:background="#1DA8B9"
     tools:context=".SignInActivity">
 
     <ImageView
         android:id="@+id/iv_login_logo"
-        android:layout_width="260dp"
-        android:layout_height="200dp"
-        android:background="@drawable/cloud"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        android:background="@drawable/sun"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.496"
         app:layout_constraintStart_toStartOf="parent"
@@ -22,6 +23,7 @@
         android:layout_width="300dp"
         android:layout_height="55dp"
         android:layout_marginStart="4dp"
+        android:layout_marginTop="48dp"
         android:background="@drawable/border"
         android:elevation="8dp"
         android:gravity="left|center"
@@ -46,7 +48,7 @@
         app:layout_constraintHorizontal_bias="0.495"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/editText"
-        app:layout_constraintVertical_bias="0.145" />
+        app:layout_constraintVertical_bias="0.050000012" />
 
     <Button
         android:id="@+id/btn_enter"
