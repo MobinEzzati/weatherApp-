@@ -6,14 +6,21 @@ import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
 import io.realm.RealmObject;
+import io.realm.annotations.Ignore;
 import io.realm.annotations.PrimaryKey;
+import io.realm.annotations.Required;
 
 
 public class WeatherModel extends RealmObject  {
 
+    @PrimaryKey
+    @SerializedName("id")
+    @Expose
+    private Integer id;
     @SerializedName("coord")
     @Expose
     private Coord coord;
+    @Ignore
     @SerializedName("weather")
     @Expose
     private List<Weather> weather = null ;
@@ -44,10 +51,6 @@ public class WeatherModel extends RealmObject  {
     @SerializedName("timezone")
     @Expose
     private Integer timezone;
-    @PrimaryKey
-    @SerializedName("id")
-    @Expose
-    private Integer id;
     @SerializedName("name")
     @Expose
     private String name;

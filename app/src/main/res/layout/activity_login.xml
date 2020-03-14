@@ -5,21 +5,20 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#1DA8B9"
-    tools:context=".SignInActivity">
-
+    tools:context=".LoginActivity">
     <ImageView
         android:id="@+id/iv_login_logo"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="32dp"
-        android:background="@drawable/sun"
+        android:background="@drawable/icon"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.496"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <EditText
-        android:id="@+id/editText"
+        android:id="@+id/et_login_email"
         android:layout_width="300dp"
         android:layout_height="55dp"
         android:layout_marginStart="4dp"
@@ -42,16 +41,46 @@
         android:elevation="10dp"
         android:gravity="left|center"
         android:hint="enter your password"
-        android:paddingLeft="16dp"
+        android:paddingLeft="@dimen/editTextpaddign"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.495"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/editText"
+        app:layout_constraintTop_toBottomOf="@+id/et_login_email"
         app:layout_constraintVertical_bias="0.050000012" />
 
+
+
+    <TextView
+        android:id="@+id/tv_login_question"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="if you don't have account click here ?  "
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="@+id/et_login_password"
+        app:layout_constraintTop_toBottomOf="@+id/btn_login_enter"
+        app:layout_constraintVertical_bias="0.19" />
+
+    <TextView
+        android:id="@+id/tv_login_signup"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="10dp"
+        android:text="sign up"
+        android:textColor="@color/blue"
+        android:textSize="20dp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.76"
+        app:layout_constraintStart_toStartOf="@+id/tv_login_question"
+        app:layout_constraintTop_toBottomOf="@+id/et_login_password"
+        app:layout_constraintVertical_bias="0.44" />
+
     <Button
-        android:id="@+id/btn_enter"
+        android:id="@+id/btn_login_enter"
         style="@style/TextAppearance.AppCompat.Button"
         android:layout_width="144dp"
         android:layout_height="60dp"
@@ -61,10 +90,15 @@
         android:text="welcome"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.498"
+        app:layout_constraintHorizontal_bias="0.51"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/et_login_password"
         app:layout_constraintVertical_bias="0.0" />
 
-
+    <FrameLayout
+        android:id="@+id/fl_sign_up"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:layout_editor_absoluteX="0dp"
+        tools:layout_editor_absoluteY="0dp"></FrameLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

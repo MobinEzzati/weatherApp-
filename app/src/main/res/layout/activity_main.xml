@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -12,8 +12,10 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="40dp"
-        android:src="@drawable/sun" />
+        android:src="@drawable/icon"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <RelativeLayout
         android:id="@+id/rl_main_search"
@@ -21,9 +23,14 @@
         android:layout_height="50dp"
         android:layout_below="@id/iv_main_logo"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="38dp"
 
-        android:background="@drawable/text_field_border">
+        android:background="@drawable/text_field_border"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.55"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/iv_main_logo"
+        app:layout_constraintVertical_bias="0.19">
 
         <EditText
             android:id="@+id/et_main_place"
@@ -39,20 +46,24 @@
             android:id="@+id/iv_main_search"
             android:layout_width="48dp"
             android:layout_height="48dp"
-            android:layout_centerVertical="true"
             android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
             android:src="@drawable/search" />
 
     </RelativeLayout>
 
-<!--    <com.tiagosantos.enchantedviewpager.EnchantedViewPager-->
-<!--        android:id="@+id/vp_main"-->
-<!--        android:layout_below="@id/rl_main_search"-->
-<!--        android:layout_marginTop="60dp"-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="wrap_content">-->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_main"
+        android:layout_width="368dp"
+        android:layout_height="362dp"
+        android:layout_marginTop="20dp"
+        android:scrollbars="vertical"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/rl_main_search"
+        app:layout_constraintVertical_bias="0.0" />
 
-<!--    </com.tiagosantos.enchantedviewpager.EnchantedViewPager>-->
 
-
-</RelativeLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>
