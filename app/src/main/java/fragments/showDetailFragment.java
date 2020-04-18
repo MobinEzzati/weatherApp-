@@ -1,14 +1,19 @@
 package fragments;
 
 
+import android.content.Intent;
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import android.os.Handler;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import mobin.io.weatherapp.MainActivity;
 import mobin.io.weatherapp.R;
 
 /**
@@ -26,6 +31,18 @@ public class showDetailFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_show_detail, container, false);
+
     }
 
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+
+                Intent intent = new Intent(getContext() , MainActivity.class);
+                startActivity(intent);
+            }
+        } , 5000);
+    }
 }
