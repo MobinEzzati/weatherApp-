@@ -1,27 +1,4 @@
 package mobin.io.weatherapp;
-import Services.TimeService;
-import Services.TimeService.MaBinder;
-import adapters.RecycleViewAdapter;
-import androidx.annotation.RequiresApi;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-import butterknife.BindView;
-import butterknife.ButterKnife;
-import butterknife.OnClick;
-import connectionToServer.WeatherApi;
-import dataModels.RecyclerViewModel;
-import dataModels.WeatherModel;
-import fragments.showDetailFragment;
-import io.realm.Realm;
-import io.realm.RealmResults;
-import otherClass.RecyclerViewOnItemClick;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-import retrofit2.Retrofit;
-import Services.TimeService.MaBinder ;
-import retrofit2.converter.gson.GsonConverterFactory;
 
 import android.content.ComponentName;
 import android.content.Context;
@@ -41,16 +18,42 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Locale;
 import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
+
+import Services.TempService;
+import Services.TimeService;
+import Services.TimeService.MaBinder;
+import Services.TempService.Mybinder;
+import adapters.RecycleViewAdapter;
+import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
+import connectionToServer.WeatherApi;
+import dataModels.RecyclerViewModel;
+import dataModels.WeatherModel;
+import dialogBoxes.LoadingDialog;
+import io.realm.Realm;
+import io.realm.RealmResults;
+import otherClass.CheckNetworkReciver;
+import otherClass.RecyclerViewOnItemClick;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener, View.OnKeyListener {
@@ -70,7 +73,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     RecycleViewAdapter recycleViewAdapter;
     Animation animation;
     Realm realm;
-    FusedLocationProviderClient fusedLocationProviderClient;
     RealmResults<WeatherModel> city;
     ArrayList<String> name = new ArrayList<>();
     int counter = 0;
@@ -78,13 +80,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     String tag = "x";
     RecyclerViewOnItemClick recyclerViewOnItemClick ;
     TimeService timeService = new TimeService();
+    TempService tempService = new TempService();
     boolean isBound =  true  ;
+    final LoadingDialog loadingDialog = new LoadingDialog(MainActivity.this);
+
+
+    CheckNetworkReciver reciver = new CheckNetworkReciver() ;
     private ServiceConnection serviceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
             Toast.makeText(MainActivity.this, "you are  connect",  Toast.LENGTH_SHORT).show();
             MaBinder maBinder = (MaBinder) iBinder;
+//            Mybinder mybinder = (Mybinder) iBinder;
+
             timeService = maBinder.getTimeService();
+//            tempService = mybinder.boundService();
+
             isBound = true;
         }
 
@@ -92,12 +103,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         public void onServiceDisconnected(ComponentName componentName) {
             isBound = false;
             Toast.makeText(MainActivity.this, "you are not connect",  Toast.LENGTH_SHORT).show();
-
         }
     };
-
-
-
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     protected void onCreate(Bundle savedInstanceState) {
@@ -105,35 +112,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
         Realm.init(this);
-//        permissionCheck();
-//        requestLocationPermission();
-//        rotatingAnimationa();
+        rotatingAnimation();
         Intent intent = new Intent(this , TimeService.class);
         bindService(intent ,serviceConnection , Context.BIND_AUTO_CREATE);
-        recyclerViewOnItemClick = (view, Position) -> Toast.makeText(MainActivity.this, "your position"+ Position, Toast.LENGTH_SHORT).show();
-        realm = Realm.getDefaultInstance();
-        realm.executeTransaction(realm -> city = realm.where(WeatherModel.class).findAll());
-        if (city.size() != 0) {
-            city.forEach(weatherModel -> recyclerViewModels.add(new RecyclerViewModel(weatherModel.getName(), String.valueOf(weatherModel.getMain().getTemp()), weatherModel.getName())));
-            city.forEach(weatherModel -> name.add(weatherModel.getName()));
-
-        } else {
-            Toast.makeText(this, "your db is empty", Toast.LENGTH_SHORT).show();
-        }
-        Collections.reverse(recyclerViewModels);
-        recycleViewAdapter = new RecycleViewAdapter(recyclerViewModels, getApplicationContext() ,recyclerViewOnItemClick);
-        layoutManager = new LinearLayoutManager(getApplicationContext());
-        rv_showTemp.setHasFixedSize(true);
-        rv_showTemp.setLayoutManager(layoutManager);
-        rv_showTemp.setAdapter(recycleViewAdapter);
-        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
-        et_places.setOnKeyListener(this);
+        check();
         showTime();
+        et_places.setOnKeyListener(this);
     }
 
-
     private void rotatingAnimation() {
-
         animation = AnimationUtils.loadAnimation(this, R.anim.rotating_animation);
         animation.setDuration(10000);
         iv_logo.startAnimation(animation);
@@ -141,10 +128,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @OnClick(R.id.iv_main_search)
     public void OnClick() {
+        loadingDialog.startDialog();
         connectionToServer(et_places.getText().toString());
     }
-
-
     private void connectionToServer(String cityOrCountryName) {
         Retrofit builder = new Retrofit.Builder().baseUrl("https://api.openweathermap.org/").addConverterFactory(GsonConverterFactory.create()).build();
         WeatherApi weatherApi = builder.create(WeatherApi.class);
@@ -153,6 +139,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @RequiresApi(api = Build.VERSION_CODES.N)
             @Override
             public void onResponse(Call<WeatherModel> call, Response<WeatherModel> response) {
+                loadingDialog.dissmisDialog();
                 if (response.body() != null) {
                     addToDb(response.body());
                     RecyclerViewModel recyclerViewModel = new RecyclerViewModel(response.body().getName(), convertFtoC(response.body().getMain().getTemp()), response.body().getName());
@@ -161,7 +148,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     Toast.makeText(MainActivity.this, "we dont have this city or country", Toast.LENGTH_SHORT).show();
                 }
             }
-
             @Override
             public void onFailure(Call<WeatherModel> call, Throwable t) {
                 Log.d("server", t.getMessage());
@@ -188,6 +174,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onDestroy() {
         super.onDestroy();
         realm.close();
+        unregisterReceiver(reciver);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
@@ -236,6 +223,32 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             }
         } , 0 , 1000);
+    }
+
+    private boolean networkIsconnect(){
+        tempService.updatedTemp(name);
+        return false ;
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    private void check(){
+        recyclerViewOnItemClick = (view, Position) -> Toast.makeText(MainActivity.this, "your position"+ Position, Toast.LENGTH_SHORT).show();
+        realm = Realm.getDefaultInstance();
+        realm.executeTransaction(realm -> city = realm.where(WeatherModel.class).findAll());
+        if (city.size() != 0) {
+            city.forEach(weatherModel -> recyclerViewModels.add(new RecyclerViewModel(weatherModel.getName(), String.valueOf(weatherModel.getMain().getTemp()), weatherModel.getName())));
+            city.forEach(weatherModel -> name.add(weatherModel.getName()));
+
+        } else {
+            Toast.makeText(this, "your db is empty", Toast.LENGTH_SHORT).show();
+        }
+        Collections.reverse(recyclerViewModels);
+        recycleViewAdapter = new RecycleViewAdapter(recyclerViewModels, getApplicationContext() ,recyclerViewOnItemClick);
+        layoutManager = new LinearLayoutManager(getApplicationContext());
+        rv_showTemp.setHasFixedSize(true);
+        rv_showTemp.setLayoutManager(layoutManager);
+        rv_showTemp.setAdapter(recycleViewAdapter);
+
     }
 }
 
