@@ -45,6 +45,8 @@ import connectionToServer.WeatherApi;
 import dataModels.RecyclerViewModel;
 import dataModels.WeatherModel;
 import dialogBoxes.LoadingDialog;
+import fragments.showDetailFragment;
+import globals.Global;
 import io.realm.Realm;
 import io.realm.RealmResults;
 import otherClass.CheckNetworkReciver;
@@ -117,6 +119,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         bindService(intent ,serviceConnection , Context.BIND_AUTO_CREATE);
         check();
         showTime();
+
         et_places.setOnKeyListener(this);
     }
 
@@ -124,6 +127,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         animation = AnimationUtils.loadAnimation(this, R.anim.rotating_animation);
         animation.setDuration(10000);
         iv_logo.startAnimation(animation);
+
     }
 
     @OnClick(R.id.iv_main_search)
@@ -232,7 +236,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     private void check(){
-        recyclerViewOnItemClick = (view, Position) -> Toast.makeText(MainActivity.this, "your position"+ Position, Toast.LENGTH_SHORT).show();
+        recyclerViewOnItemClick = (view, Position) ->     getSupportFragmentManager().beginTransaction()
+                .add(R.id.fl_main, new showDetailFragment()).setCustomAnimations(R.anim.enter , R.anim.exit).commit();
+
         realm = Realm.getDefaultInstance();
         realm.executeTransaction(realm -> city = realm.where(WeatherModel.class).findAll());
         if (city.size() != 0) {
