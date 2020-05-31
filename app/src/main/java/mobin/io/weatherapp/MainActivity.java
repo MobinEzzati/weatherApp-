@@ -19,9 +19,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationServices;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -32,7 +29,6 @@ import java.util.TimerTask;
 import Services.TempService;
 import Services.TimeService;
 import Services.TimeService.MaBinder;
-import Services.TempService.Mybinder;
 import adapters.RecycleViewAdapter;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
@@ -41,12 +37,18 @@ import androidx.recyclerview.widget.RecyclerView;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import connectionToServer.RetrofitBuilder;
 import connectionToServer.WeatherApi;
 import dataModels.RecyclerViewModel;
+import dataModels.Weather;
 import dataModels.WeatherModel;
 import dialogBoxes.LoadingDialog;
 import fragments.showDetailFragment;
-import globals.Global;
+import io.reactivex.Observable;
+import io.reactivex.Observer;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.schedulers.Schedulers;
 import io.realm.Realm;
 import io.realm.RealmResults;
 import otherClass.CheckNetworkReciver;
@@ -84,6 +86,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     TimeService timeService = new TimeService();
     TempService tempService = new TempService();
     boolean isBound =  true  ;
+    String cityName  = "";
     final LoadingDialog loadingDialog = new LoadingDialog(MainActivity.this);
 
 
@@ -93,11 +96,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
             Toast.makeText(MainActivity.this, "you are  connect",  Toast.LENGTH_SHORT).show();
             MaBinder maBinder = (MaBinder) iBinder;
-//            Mybinder mybinder = (Mybinder) iBinder;
-
             timeService = maBinder.getTimeService();
-//            tempService = mybinder.boundService();
-
             isBound = true;
         }
 
@@ -133,7 +132,34 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @OnClick(R.id.iv_main_search)
     public void OnClick() {
         loadingDialog.startDialog();
-        connectionToServer(et_places.getText().toString());
+        WeatherApi  weatherApi = RetrofitBuilder.getRetrofit().create(WeatherApi.class);
+        Observable<WeatherModel> weatherModelObservable = weatherApi.WEATHER_MODEL_OBSERVABLE(et_places.getText().toString());
+        weatherModelObservable.observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())
+                .subscribe(new Observer<WeatherModel>() {
+                    @Override
+                    public void onSubscribe(Disposable d) {
+                    }
+                    @RequiresApi(api = Build.VERSION_CODES.N)
+                    @Override
+                    public void onNext(WeatherModel weatherModel) {
+                        cityName = weatherModel.getName();
+                        addToDb(weatherModel);
+                        RecyclerViewModel recyclerViewModel = new RecyclerViewModel(weatherModel.getName(), convertFtoC(weatherModel.getMain().getTemp()),weatherModel.getName() );
+                        addItemToRecyclerView(recyclerViewModel);
+                    }
+                    @Override
+                    public void onError(Throwable e) {
+                        Toast.makeText(getApplicationContext(), e.getMessage().toString(), Toast.LENGTH_SHORT).show();
+                    }
+                    @Override
+                    public void onComplete() {
+                        loadingDialog.dissmisDialog();
+                        Toast.makeText(getApplicationContext(), cityName +" added to your list", Toast.LENGTH_SHORT).show();
+                    }
+                });
+
+//        connectionToServer(et_places.getText().toString());
     }
     private void connectionToServer(String cityOrCountryName) {
         Retrofit builder = new Retrofit.Builder().baseUrl("https://api.openweathermap.org/").addConverterFactory(GsonConverterFactory.create()).build();
@@ -143,7 +169,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @RequiresApi(api = Build.VERSION_CODES.N)
             @Override
             public void onResponse(Call<WeatherModel> call, Response<WeatherModel> response) {
-                loadingDialog.dissmisDialog();
+//                loadingDialog.dissmisDialog();
                 if (response.body() != null) {
                     addToDb(response.body());
                     RecyclerViewModel recyclerViewModel = new RecyclerViewModel(response.body().getName(), convertFtoC(response.body().getMain().getTemp()), response.body().getName());
