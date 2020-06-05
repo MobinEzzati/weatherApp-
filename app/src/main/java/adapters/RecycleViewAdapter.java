@@ -1,5 +1,6 @@
 package adapters;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.speech.tts.TextToSpeech;
 import android.view.LayoutInflater;
@@ -34,15 +35,16 @@ public class RecycleViewAdapter extends RecyclerView.Adapter<RecycleViewAdapter.
         ImageView iv_icon;
         TextView tv_temp ;
         TextView tv_city ;
+        TextView tv_country ;
         private RecyclerViewOnItemClick recyclerViewOnItemClick ;
 
 
         public ViewHolder(@NonNull View itemView  , RecyclerViewOnItemClick recyclerViewOnItemClick) {
             super(itemView);
 
-            iv_icon = itemView.findViewById(R.id.iv_model_icon);
             tv_city = itemView.findViewById(R.id.tv_model_city);
             tv_temp = itemView.findViewById(R.id.tv_model_temp);
+            tv_country = itemView.findViewById(R.id.tv_model_country);
             this.recyclerViewOnItemClick = recyclerViewOnItemClick ;
             itemView.setOnClickListener(this);
         }
@@ -61,14 +63,14 @@ public class RecycleViewAdapter extends RecyclerView.Adapter<RecycleViewAdapter.
         View layoutInflater = LayoutInflater.from(context).inflate(R.layout.model_recycler_main ,parent , false);
         return new ViewHolder(layoutInflater , recyclerViewOnItemClick);
     }
+    @SuppressLint("SetTextI18n")
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         RecyclerViewModel recyclerViewModel = recyclerViewModels.get(position);
-        holder.tv_temp.setText(recyclerViewModel.getCityTemp()+"c");
+        String temp  = String.valueOf(Math.ceil(Double.parseDouble(recyclerViewModel.getCityTemp())));
+        holder.tv_temp.setText(temp+"c");
         holder.tv_city.setText(recyclerViewModel.getCityName());
-        if (recyclerViewModel.getCityName() == "tehran"){
-             holder.iv_icon.setBackgroundResource(R.drawable.temp);
-        }
+        holder.tv_country.setText(recyclerViewModel.getCountry());
     }
     @Override
     public int getItemCount() {

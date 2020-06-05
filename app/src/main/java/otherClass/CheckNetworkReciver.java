@@ -11,7 +11,7 @@ import android.net.NetworkRequest;
 import androidx.annotation.NonNull;
 
 public class CheckNetworkReciver extends BroadcastReceiver {
-        Context  mainContext ;
+        Context  mainContext = null ;
         boolean isconnect = true ;
     @Override
     public void onReceive(Context context, Intent intent) {

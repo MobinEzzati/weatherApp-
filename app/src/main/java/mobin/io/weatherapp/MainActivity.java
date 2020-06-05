@@ -1,5 +1,6 @@
 package mobin.io.weatherapp;
 
+import android.app.ProgressDialog;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -16,6 +17,7 @@ import android.view.animation.AnimationUtils;
 import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -63,12 +65,14 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class MainActivity extends AppCompatActivity implements View.OnClickListener, View.OnKeyListener {
     private static final int COARSE_LOCATION = 10;
     private static final String TAG = "tag";
-    @BindView(R.id.iv_main_logo)
-    ImageView iv_logo;
+//    @BindView(R.id.iv_main_logo)
+//    ImageView iv_logo;
     @BindView(R.id.et_main_place)
     EditText et_places;
     @BindView(R.id.iv_main_search)
     ImageView iv_search;
+    @BindView(R.id.pb_main)
+    ProgressBar pb_main ;
     RecyclerView.LayoutManager layoutManager;
     @BindView(R.id.rv_main)
     RecyclerView rv_showTemp;
@@ -88,7 +92,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     boolean isBound =  true  ;
     String cityName  = "";
     final LoadingDialog loadingDialog = new LoadingDialog(MainActivity.this);
-
 
     CheckNetworkReciver reciver = new CheckNetworkReciver() ;
     private ServiceConnection serviceConnection = new ServiceConnection() {
@@ -111,9 +114,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        reciver.onReceive(getApplicationContext() , getIntent());
+       pb_main = new ProgressBar(getApplicationContext());
         ButterKnife.bind(this);
         Realm.init(this);
-        rotatingAnimation();
+//        rotatingAnimation();
         Intent intent = new Intent(this , TimeService.class);
         bindService(intent ,serviceConnection , Context.BIND_AUTO_CREATE);
         check();
@@ -122,16 +127,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         et_places.setOnKeyListener(this);
     }
 
-    private void rotatingAnimation() {
-        animation = AnimationUtils.loadAnimation(this, R.anim.rotating_animation);
-        animation.setDuration(10000);
-        iv_logo.startAnimation(animation);
-
-    }
+//    private void rotatingAnimation() {
+//        animation = AnimationUtils.loadAnimation(this, R.anim.rotating_animation);
+//        animation.setDuration(10000);
+//        iv_logo.startAnimation(animation);
+//
+//    }
 
     @OnClick(R.id.iv_main_search)
     public void OnClick() {
-        loadingDialog.startDialog();
+        if (reciver.isConnect()){
+                    pb_main.setVisibility(View.VISIBLE);
         WeatherApi  weatherApi = RetrofitBuilder.getRetrofit().create(WeatherApi.class);
         Observable<WeatherModel> weatherModelObservable = weatherApi.WEATHER_MODEL_OBSERVABLE(et_places.getText().toString());
         weatherModelObservable.observeOn(AndroidSchedulers.mainThread())
@@ -143,10 +149,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     @RequiresApi(api = Build.VERSION_CODES.N)
                     @Override
                     public void onNext(WeatherModel weatherModel) {
+                        pb_main.setVisibility(View.INVISIBLE);
                         cityName = weatherModel.getName();
-                        addToDb(weatherModel);
-                        RecyclerViewModel recyclerViewModel = new RecyclerViewModel(weatherModel.getName(), convertFtoC(weatherModel.getMain().getTemp()),weatherModel.getName() );
-                        addItemToRecyclerView(recyclerViewModel);
+                            addToDb(weatherModel);
+                            RecyclerViewModel recyclerViewModel = new RecyclerViewModel(weatherModel.getName(), convertFtoC(weatherModel.getMain().getTemp()),weatherModel.getSys().getCountry() );
+                            addItemToRecyclerView(recyclerViewModel);
+
                     }
                     @Override
                     public void onError(Throwable e) {
@@ -154,10 +162,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     }
                     @Override
                     public void onComplete() {
-                        loadingDialog.dissmisDialog();
+//                        loadingDialog.dissmisDialog();
                         Toast.makeText(getApplicationContext(), cityName +" added to your list", Toast.LENGTH_SHORT).show();
                     }
                 });
+
+        }else {
+
+            Toast.makeText(getApplicationContext(), "check your internet", Toast.LENGTH_SHORT).show();
+        }
+
 
 //        connectionToServer(et_places.getText().toString());
     }
@@ -263,14 +277,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @RequiresApi(api = Build.VERSION_CODES.N)
     private void check(){
         recyclerViewOnItemClick = (view, Position) ->     getSupportFragmentManager().beginTransaction()
-                .add(R.id.fl_main, new showDetailFragment()).setCustomAnimations(R.anim.enter , R.anim.exit).commit();
+                .add(R.id.fl_main, new showDetailFragment()).setCustomAnimations(R.anim.enter , R.anim.exit).addToBackStack("back").commit();
 
         realm = Realm.getDefaultInstance();
         realm.executeTransaction(realm -> city = realm.where(WeatherModel.class).findAll());
         if (city.size() != 0) {
-            city.forEach(weatherModel -> recyclerViewModels.add(new RecyclerViewModel(weatherModel.getName(), String.valueOf(weatherModel.getMain().getTemp()), weatherModel.getName())));
+            city.forEach(weatherModel -> recyclerViewModels.add(new RecyclerViewModel(weatherModel.getName(), String.valueOf(weatherModel.getMain().getTemp()), weatherModel.getSys().getCountry())));
             city.forEach(weatherModel -> name.add(weatherModel.getName()));
-
         } else {
             Toast.makeText(this, "your db is empty", Toast.LENGTH_SHORT).show();
         }

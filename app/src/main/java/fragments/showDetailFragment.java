@@ -36,13 +36,10 @@ public class showDetailFragment extends Fragment {
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        new Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-
-                Intent intent = new Intent(getContext() , MainActivity.class);
-                startActivity(intent);
-            }
-        } , 5000);
+//        new Handler().postDelayed(() -> {
+//
+//            Intent intent = new Intent(view.getContext() , MainActivity.class);
+//            startActivity(intent);
+//        }, 5000);
     }
 }

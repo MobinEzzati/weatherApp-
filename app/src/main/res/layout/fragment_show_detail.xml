@@ -1,54 +1,63 @@
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+
+<RelativeLayout android:background="#FFFFFF"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:id="@+id/fl_detail"
-    tools:context="fragments.showDetailFragment">
-    <RelativeLayout
-        android:background="#FFFFFF"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+
+    <ImageView
+        android:id="@+id/iv_detail_city"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:src="@drawable/newyork"
+        android:scaleType="centerCrop"
+        />
 
+    <TextView
+        android:id="@+id/tv_detail_state"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="30dp"
+        android:layout_marginTop="50dp"
+        android:text="sunny"
+        android:textStyle="normal"
+        android:textSize="20dp"
 
-        <TextView
-            android:id="@+id/tv_detail_name"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerHorizontal="true"
-            android:layout_marginTop="100dp"
-            android:fontFamily="casual"
-            android:text="london"
-            android:textColor="@color/black"
-            android:textSize="23dp" />
+        />
 
-        <TextView
-            android:id="@+id/tv_detail_date"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/tv_detail_name"
-            android:layout_centerHorizontal="true"
-            android:fontFamily="sans-serif-smallcaps"
-            android:text="MONDAY 7:00 am"
-            android:textColor="@color/black"
-            android:textSize="20dp" />
-        <ImageView
-            android:id="@+id/iv_detail_state"
-            android:src="@drawable/ic_launcher_background"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerHorizontal="true"
-            android:layout_centerVertical="true"
-            />
+    <TextView
+        android:id="@+id/tv_detail_temp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/tv_detail_state"
+        android:layout_marginLeft="35dp"
+        android:text="5"
+        android:textColor="@color/black"
+        android:textSize="70dp" />
 
-        <TextView
-            android:id="@+id/tv_detail_temp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/iv_detail_state"
-            android:layout_centerHorizontal="true"
-            android:layout_marginTop="100dp"
-            />
+    <ImageView
+        android:background="@drawable/wave_view"
+        android:layout_width="wrap_content"
+        android:rotation="180"
+        android:layout_height="400dp"
+        android:layout_alignParentBottom="true"
+        />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="NEW YORK"
+        android:textStyle="bold"
+        android:textColor="@color/black"
+        android:layout_marginTop="550dp"
+        android:layout_marginLeft="40dp"
+        />
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="460dp"
+        android:layout_marginLeft="320dp"
 
+        />
     </RelativeLayout>
 
-</FrameLayout>
+

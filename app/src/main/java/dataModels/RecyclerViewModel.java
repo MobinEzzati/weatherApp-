@@ -1,18 +1,20 @@
 package dataModels;
 
 public class RecyclerViewModel {
-    private  String  cityIcon ;
+    private  String country;
     private  String cityTemp ;
     private  String cityName ;
 
-    public RecyclerViewModel(String cityIcon, String cityTemp, String cityName) {
-        this.cityIcon = cityIcon;
+
+
+    public RecyclerViewModel(String country, String cityTemp, String cityName) {
+        this.country = country;
         this.cityTemp = cityTemp;
         this.cityName = cityName;
     }
 
-    public String getCityIcon() {
-        return cityIcon;
+    public String getCountry() {
+        return country;
     }
 
     public String getCityTemp() {
