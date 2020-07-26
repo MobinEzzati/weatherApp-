@@ -1,63 +1,161 @@
 
-<RelativeLayout android:background="#FFFFFF"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    xmlns:android="http://schemas.android.com/apk/res/android">
-
-
-    <ImageView
-        android:id="@+id/iv_detail_city"
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
+    <data>
+        <variable
+            name="fragmentDetailModel"
+            type="dataModels.FragmentDetailModel" />
+    </data>
+    <RelativeLayout android:background="#FFFFFF"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:src="@drawable/newyork"
-        android:scaleType="centerCrop"
-        />
+        android:layout_height="match_parent">
 
-    <TextView
-        android:id="@+id/tv_detail_state"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="30dp"
-        android:layout_marginTop="50dp"
-        android:text="sunny"
-        android:textStyle="normal"
-        android:textSize="20dp"
 
-        />
+        <TextView
+            android:id="@+id/tv_detail_city"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="26dp"
+            android:layout_marginTop="80dp"
+            android:text="@{fragmentDetailModel.cityName}"
+            android:textColor="@color/black"
+            android:textStyle="normal"
+            android:textSize="42dp"
 
-    <TextView
-        android:id="@+id/tv_detail_temp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/tv_detail_state"
-        android:layout_marginLeft="35dp"
-        android:text="5"
-        android:textColor="@color/black"
-        android:textSize="70dp" />
 
-    <ImageView
-        android:background="@drawable/wave_view"
-        android:layout_width="wrap_content"
-        android:rotation="180"
-        android:layout_height="400dp"
-        android:layout_alignParentBottom="true"
-        />
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="NEW YORK"
-        android:textStyle="bold"
-        android:textColor="@color/black"
-        android:layout_marginTop="550dp"
-        android:layout_marginLeft="40dp"
-        />
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="460dp"
-        android:layout_marginLeft="320dp"
+            />
 
-        />
+<!--        <TextView-->
+<!--            android:id="@+id/tv_detail_date"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:layout_below="@id/tv_detail_city"-->
+<!--            android:layout_marginLeft="26dp"-->
+<!--            android:text="15apirintehran "-->
+<!--            android:textColor="@color/gray"-->
+<!--            android:textSize="23dp"-->
+<!--            android:fontFamily="monospace"-->
+
+<!--            />-->
+
+<!--        <ImageView-->
+<!--            android:id="@+id/iv_detail_state"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:layout_above="@+id/tv_detail_temp"-->
+<!--            android:layout_below="@id/tv_detail_date"-->
+<!--            android:layout_centerHorizontal="true"-->
+<!--            android:layout_marginTop="7dp"-->
+<!--            android:layout_marginBottom="45dp"-->
+<!--            android:scaleType="centerCrop"-->
+<!--            android:src="@drawable/ic_launcher_background" />-->
+
+        <TextView
+            android:id="@+id/tv_detail_temp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:text="@{fragmentDetailModel.temp}"
+            android:textColor="@color/black"
+            android:textSize="48dp"
+            />
+
+        <TextView
+            android:id="@+id/tv_detail_description"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/tv_detail_temp"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="24dp"
+            android:text="@{fragmentDetailModel.description}"
+            android:textColor="@color/colorAccent"
+            android:textSize="23sp" />
+
+        <TextView
+            android:id="@+id/tv_detail_humidity"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/tv_detail_description"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="100dp"
+            android:text="@{fragmentDetailModel.hummidty}"
+            android:textSize="23dp"
+            android:textStyle="bold"
+            android:textColor="@color/black"
+            />
+
+        <TextView
+            android:id="@+id/tv_detail_wind"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/tv_detail_description"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="100dp"
+            android:layout_marginRight="80dp"
+            android:layout_toLeftOf="@id/tv_detail_humidity"
+            android:text="@{fragmentDetailModel.wind}"
+            android:textColor="@color/black"
+            android:textSize="23dp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tv_detail_max"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/tv_detail_description"
+            android:layout_centerHorizontal="true"
+            android:layout_marginLeft="80dp"
+            android:layout_marginTop="100dp"
+            android:layout_toRightOf="@id/tv_detail_humidity"
+            android:text="@{fragmentDetailModel.max}"
+            android:textColor="@color/black"
+            android:textSize="23dp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tv_detail_wind_tx"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/tv_detail_wind"
+            android:layout_alignStart="@+id/tv_detail_wind"
+            android:layout_alignEnd="@+id/tv_detail_wind"
+            android:layout_marginTop="10dp"
+            android:layout_toLeftOf="@id/tv_detail_humidity"
+            android:gravity="center"
+            android:text="Wind "
+            android:textColor="@color/black"
+            android:textSize="13dp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="65dp"
+            android:layout_height="23dp"
+            android:layout_below="@id/tv_detail_humidity"
+            android:layout_alignStart="@+id/tv_detail_humidity"
+            android:layout_alignEnd="@+id/tv_detail_humidity"
+            android:layout_marginStart="-20dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginRight="4dp"
+            android:gravity="center"
+            android:text="humidity"
+            android:textColor="@color/black"
+            android:textSize="14dp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/tv_detail_max"
+            android:layout_alignStart="@+id/tv_detail_max"
+            android:layout_marginTop="10dp"
+            android:text="max"
+            android:textColor="@color/black"
+            android:textSize="14dp"
+            android:textStyle="bold" />
+
     </RelativeLayout>
+    
+    
+</layout>
+
 
 

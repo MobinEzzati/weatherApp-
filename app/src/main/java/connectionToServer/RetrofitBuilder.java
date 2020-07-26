@@ -11,6 +11,7 @@ public class RetrofitBuilder {
 
 
     public  static  final  String BASE_URL = "https://api.openweathermap.org/";
+    public  static  final String IMAGE_URL = "";
 
     public static Retrofit retrofit = null ;
 
@@ -29,7 +30,6 @@ public class RetrofitBuilder {
                     .addConverterFactory(GsonConverterFactory.create())
                     .build();
         }
-
         return retrofit ;
     }
 

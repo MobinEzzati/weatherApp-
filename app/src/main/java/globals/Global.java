@@ -1,40 +1,31 @@
 package globals;
 
-import android.app.Activity;
+import android.content.Context;
 import android.widget.Toast;
 
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
-import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentTransaction;
-import fragments.showDetailFragment;
-import mobin.io.weatherapp.R;
 
 
 
-enum FragmentsAvailable {
+  public class Global {
 
-    DETAIL
-}
+      public  enum FragName {
 
-public class Global extends FragmentActivity {
+          LoginFrag,
+          SHOWDETAIL_FRAG
 
-    public void changeFragment(Fragment newFragment, FragmentsAvailable newFragmentType, boolean withoutAnimation) {
+      }
+
+      public static  class global extends FragmentActivity {
 
 
-        FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+          public static void toast(Context context , String text){
 
+              Toast.makeText(context, text, Toast.LENGTH_SHORT).show();
+          }
+      }
 
-        try {
-            getSupportFragmentManager().popBackStackImmediate(newFragmentType.toString(), FragmentManager.POP_BACK_STACK_INCLUSIVE);
-        } catch (java.lang.IllegalStateException e) {
-
-        }
-
-        transaction.addToBackStack(newFragmentType.toString());
-        transaction.replace(R.id.fl_main, newFragment);
-        transaction.commitAllowingStateLoss();
-
-    }
+      public static void toast(Context context , String text){
+          Toast.makeText(context, text, Toast.LENGTH_SHORT).show();
+      }
 }

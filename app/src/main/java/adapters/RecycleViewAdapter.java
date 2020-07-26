@@ -21,9 +21,9 @@ import mobin.io.weatherapp.R;
 import otherClass.RecyclerViewOnItemClick;
 
 public class RecycleViewAdapter extends RecyclerView.Adapter<RecycleViewAdapter.ViewHolder> {
-    List<RecyclerViewModel> recyclerViewModels;
-    Context context ;
-    RecyclerViewOnItemClick recyclerViewOnItemClick ;
+    private List<RecyclerViewModel> recyclerViewModels;
+    private Context context ;
+    private RecyclerViewOnItemClick recyclerViewOnItemClick ;
 
     public RecycleViewAdapter(List<RecyclerViewModel> recyclerViewModels, Context context , RecyclerViewOnItemClick recyclerViewOnItemClick) {
         this.recyclerViewModels = recyclerViewModels;
@@ -67,8 +67,7 @@ public class RecycleViewAdapter extends RecyclerView.Adapter<RecycleViewAdapter.
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         RecyclerViewModel recyclerViewModel = recyclerViewModels.get(position);
-        String temp  = String.valueOf(Math.ceil(Double.parseDouble(recyclerViewModel.getCityTemp())));
-        holder.tv_temp.setText(temp+"c");
+        holder.tv_temp.setText(recyclerViewModel.getCityTemp() +"c");
         holder.tv_city.setText(recyclerViewModel.getCityName());
         holder.tv_country.setText(recyclerViewModel.getCountry());
     }

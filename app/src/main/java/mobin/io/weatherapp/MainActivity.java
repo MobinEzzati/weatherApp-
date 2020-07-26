@@ -1,21 +1,19 @@
 package mobin.io.weatherapp;
 
-import android.app.ProgressDialog;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
+import android.content.IntentFilter;
+import android.net.ConnectivityManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.IBinder;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.animation.Animation;
-import android.view.animation.AnimationUtils;
 import android.view.inputmethod.EditorInfo;
-import android.widget.EditText;
+import android.widget.AutoCompleteTextView;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -25,15 +23,18 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.Vector;
 
-import Services.TempService;
+import Services.InternetConnection;
 import Services.TimeService;
-import Services.TimeService.MaBinder;
 import adapters.RecycleViewAdapter;
+import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.FragmentTransaction;
+import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import butterknife.BindView;
@@ -42,9 +43,8 @@ import butterknife.OnClick;
 import connectionToServer.RetrofitBuilder;
 import connectionToServer.WeatherApi;
 import dataModels.RecyclerViewModel;
-import dataModels.Weather;
 import dataModels.WeatherModel;
-import dialogBoxes.LoadingDialog;
+import dialogBoxes.InternetDialog;
 import fragments.showDetailFragment;
 import io.reactivex.Observable;
 import io.reactivex.Observer;
@@ -53,156 +53,115 @@ import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 import io.realm.Realm;
 import io.realm.RealmResults;
-import otherClass.CheckNetworkReciver;
 import otherClass.RecyclerViewOnItemClick;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
 
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener, View.OnKeyListener {
     private static final int COARSE_LOCATION = 10;
     private static final String TAG = "tag";
-//    @BindView(R.id.iv_main_logo)
+    //    @BindView(R.id.iv_main_logo)
 //    ImageView iv_logo;
-    @BindView(R.id.et_main_place)
-    EditText et_places;
+    @BindView(R.id.act_main_place)
+    AutoCompleteTextView act_places;
     @BindView(R.id.iv_main_search)
     ImageView iv_search;
     @BindView(R.id.pb_main)
-    ProgressBar pb_main ;
+    ProgressBar pb_main;
     RecyclerView.LayoutManager layoutManager;
     @BindView(R.id.rv_main)
     RecyclerView rv_showTemp;
     @BindView(R.id.tv_time)
-    TextView tv_time ;
+    TextView tv_time;
     RecycleViewAdapter recycleViewAdapter;
     Animation animation;
+    ItemTouchHelper itemTouchHelper;
     Realm realm;
     RealmResults<WeatherModel> city;
     ArrayList<String> name = new ArrayList<>();
     int counter = 0;
     List<RecyclerViewModel> recyclerViewModels = new ArrayList<RecyclerViewModel>();
     String tag = "x";
-    RecyclerViewOnItemClick recyclerViewOnItemClick ;
+    RecyclerViewOnItemClick recyclerViewOnItemClick = null;
     TimeService timeService = new TimeService();
-    TempService tempService = new TempService();
-    boolean isBound =  true  ;
-    String cityName  = "";
-    final LoadingDialog loadingDialog = new LoadingDialog(MainActivity.this);
+    boolean isBound = true;
+    String cityName = "";
+    InternetConnection internetConnection = null ;
+    Vector<WeatherModel>globalWeathers = new Vector<>();
+    InternetDialog internetDialog = new InternetDialog(this);
+//    CheckNetworkReciver reciver = new CheckNetworkReciver();
 
-    CheckNetworkReciver reciver = new CheckNetworkReciver() ;
-    private ServiceConnection serviceConnection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
-            Toast.makeText(MainActivity.this, "you are  connect",  Toast.LENGTH_SHORT).show();
-            MaBinder maBinder = (MaBinder) iBinder;
-            timeService = maBinder.getTimeService();
-            isBound = true;
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName componentName) {
-            isBound = false;
-            Toast.makeText(MainActivity.this, "you are not connect",  Toast.LENGTH_SHORT).show();
-        }
-    };
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        reciver.onReceive(getApplicationContext() , getIntent());
-       pb_main = new ProgressBar(getApplicationContext());
+        pb_main = new ProgressBar(getApplicationContext());
         ButterKnife.bind(this);
         Realm.init(this);
-//        rotatingAnimation();
-        Intent intent = new Intent(this , TimeService.class);
-        bindService(intent ,serviceConnection , Context.BIND_AUTO_CREATE);
         check();
-        showTime();
-
-        et_places.setOnKeyListener(this);
+        checkInternet();
+        act_places.setOnKeyListener(this);
     }
-
-//    private void rotatingAnimation() {
-//        animation = AnimationUtils.loadAnimation(this, R.anim.rotating_animation);
-//        animation.setDuration(10000);
-//        iv_logo.startAnimation(animation);
-//
-//    }
 
     @OnClick(R.id.iv_main_search)
     public void OnClick() {
-        if (reciver.isConnect()){
-                    pb_main.setVisibility(View.VISIBLE);
-        WeatherApi  weatherApi = RetrofitBuilder.getRetrofit().create(WeatherApi.class);
-        Observable<WeatherModel> weatherModelObservable = weatherApi.WEATHER_MODEL_OBSERVABLE(et_places.getText().toString());
-        weatherModelObservable.observeOn(AndroidSchedulers.mainThread())
-                .subscribeOn(Schedulers.io())
-                .subscribe(new Observer<WeatherModel>() {
-                    @Override
-                    public void onSubscribe(Disposable d) {
-                    }
-                    @RequiresApi(api = Build.VERSION_CODES.N)
-                    @Override
-                    public void onNext(WeatherModel weatherModel) {
-                        pb_main.setVisibility(View.INVISIBLE);
-                        cityName = weatherModel.getName();
-                            addToDb(weatherModel);
-                            RecyclerViewModel recyclerViewModel = new RecyclerViewModel(weatherModel.getName(), convertFtoC(weatherModel.getMain().getTemp()),weatherModel.getSys().getCountry() );
-                            addItemToRecyclerView(recyclerViewModel);
+//        checkInternet();
+//        connectionToServer(act_places.getText().toString());
+//        internetDialog.startDialog();
+        checkInternet();
+    }
 
-                    }
-                    @Override
-                    public void onError(Throwable e) {
-                        Toast.makeText(getApplicationContext(), e.getMessage().toString(), Toast.LENGTH_SHORT).show();
-                    }
-                    @Override
-                    public void onComplete() {
-//                        loadingDialog.dissmisDialog();
-                        Toast.makeText(getApplicationContext(), cityName +" added to your list", Toast.LENGTH_SHORT).show();
-                    }
-                });
+    private void connectionToServer(String cityOrCountryName) {
+            pb_main.setVisibility(View.VISIBLE);
+            WeatherApi weatherApi = RetrofitBuilder.getRetrofit().create(WeatherApi.class);
+            Observable<WeatherModel> weatherModelObservable = weatherApi.WEATHER_MODEL_OBSERVABLE(cityOrCountryName);
+            weatherModelObservable.observeOn(AndroidSchedulers.mainThread())
+                    .subscribeOn(Schedulers.io())
+                    .subscribe(new Observer<WeatherModel>() {
+                        @Override
+                        public void onSubscribe(Disposable d) {
+                        }
+                        @RequiresApi(api = Build.VERSION_CODES.N)
+                        @Override
+                        public void onNext(WeatherModel weatherModel) {
+                            pb_main.setVisibility(View.INVISIBLE);
+                            cityName = weatherModel.getName();
+                            if (name.contains(weatherModel.getName())){
+                                Toast.makeText(getApplicationContext(), "you have this item", Toast.LENGTH_SHORT).show();
+                            }else {
+                                name.add(weatherModel.getName());
+                                RecyclerViewModel recyclerViewModel = new RecyclerViewModel(weatherModel.getName(), String.valueOf(Math.ceil(weatherModel.getMain().getTemp() - 273.15)), weatherModel.getSys().getCountry());
+                                addItemToRecyclerView(recyclerViewModel);
+                                addToDb(weatherModel);
+                            }
+//                            RecyclerViewModel recyclerViewModel = new RecyclerViewModel(weatherModel.getName(), String.valueOf(Math.ceil(weatherModel.getMain().getTemp() - 273.15)), weatherModel.getSys().getCountry());
+//                            addItemToRecyclerView(recyclerViewModel);
+//                            addToDb(weatherModel);
+                            globalWeathers.add(weatherModel);
+                        }
+                        @Override
+                        public void onError(Throwable e) {
+                            pb_main.setVisibility(View.INVISIBLE);
+                            Toast.makeText(getApplicationContext(), e.getMessage().toString(), Toast.LENGTH_SHORT).show();
+                        }
 
-        }else {
+                        @Override
+                        public void onComplete() {
+                            pb_main.setVisibility(View.INVISIBLE);
+                            Log.d(TAG, "onComplete: " + cityName + " added to your list");
 
-            Toast.makeText(getApplicationContext(), "check your internet", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+
         }
 
 
-//        connectionToServer(et_places.getText().toString());
-    }
-    private void connectionToServer(String cityOrCountryName) {
-        Retrofit builder = new Retrofit.Builder().baseUrl("https://api.openweathermap.org/").addConverterFactory(GsonConverterFactory.create()).build();
-        WeatherApi weatherApi = builder.create(WeatherApi.class);
-        Call<WeatherModel> listCall = weatherApi.listWeather(cityOrCountryName);
-        listCall.enqueue(new Callback<WeatherModel>() {
-            @RequiresApi(api = Build.VERSION_CODES.N)
-            @Override
-            public void onResponse(Call<WeatherModel> call, Response<WeatherModel> response) {
-//                loadingDialog.dissmisDialog();
-                if (response.body() != null) {
-                    addToDb(response.body());
-                    RecyclerViewModel recyclerViewModel = new RecyclerViewModel(response.body().getName(), convertFtoC(response.body().getMain().getTemp()), response.body().getName());
-                    addItemToRecyclerView(recyclerViewModel);
-                } else {
-                    Toast.makeText(MainActivity.this, "we dont have this city or country", Toast.LENGTH_SHORT).show();
-                }
-            }
-            @Override
-            public void onFailure(Call<WeatherModel> call, Throwable t) {
-                Log.d("server", t.getMessage());
-            }
-        });
-    }
+
 
 
     @Override
     public void onClick(View view) {
-        connectionToServer(et_places.getText().toString());
+        connectionToServer(act_places.getText().toString());
     }
 
 
@@ -210,90 +169,169 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         realm.executeTransactionAsync(realm -> {
                     realm.copyToRealm(weatherModel);
                 },
-                () -> Log.d("add", et_places.getText().toString() + " added to database"),
+                () -> Log.d("add", act_places.getText().toString() + " added to database"),
                 error -> Log.d("dbError", Objects.requireNonNull(error.getMessage())));
     }
-
     @Override
     protected void onDestroy() {
         super.onDestroy();
         realm.close();
-        unregisterReceiver(reciver);
+//        unregisterReceiver(reciver) ;
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     private void addItemToRecyclerView(RecyclerViewModel recyclerViewModel) {
-        name.add(recyclerViewModel.getCityName());
-        for (int i = 0; i < name.size(); i++) {
-            if (name.get(i).equals(recyclerViewModel.getCityName())) {
-                counter = counter + 1;
-            }
-        }
-        if (counter > 1) {
-            Toast.makeText(this, "you added this item", Toast.LENGTH_SHORT).show();
-        } else {
-            Collections.reverse(recyclerViewModels);
+        Collections.reverse(recyclerViewModels);
             recyclerViewModels.add(recyclerViewModel);
-            Collections.reverse(recyclerViewModels);
-
-            recycleViewAdapter = new RecycleViewAdapter(recyclerViewModels, getApplicationContext() , recyclerViewOnItemClick);
+        Collections.reverse(recyclerViewModels);
+        Collections.reverse(name);
+            recycleViewAdapter = new RecycleViewAdapter(recyclerViewModels, getApplicationContext(), recyclerViewOnItemClick);
             recycleViewAdapter.notifyDataSetChanged();
             rv_showTemp.setHasFixedSize(true);
             rv_showTemp.setAdapter(recycleViewAdapter);
             rv_showTemp.setLayoutManager(layoutManager);
-        }
+            RecyclerView.ItemDecoration  decoration =  new DividerItemDecoration(getApplicationContext() ,DividerItemDecoration.VERTICAL);
+            rv_showTemp.addItemDecoration(decoration);
+            itemTouchHelper = new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(0  ,ItemTouchHelper.LEFT) {
+                @Override
+                public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
+                    return false;
+                }
+                @Override
+                public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
+                    int position  = viewHolder.getAdapterPosition();
+                    name.remove(position);
+                    recyclerViewModels.remove(position);
+                    recycleViewAdapter.notifyDataSetChanged();
+
+                }
+            });
+        itemTouchHelper.attachToRecyclerView(rv_showTemp);
         counter = 0;
     }
 
     @Override
     public boolean onKey(View view, int i, KeyEvent keyEvent) {
         if (i == EditorInfo.IME_ACTION_SEARCH || keyEvent.getKeyCode() == KeyEvent.KEYCODE_ENTER) {
-            connectionToServer(et_places.getText().toString());
+            connectionToServer(act_places.getText().toString());
             return true;
         }
         return false;
     }
-
-    public String convertFtoC(Double fahrenheit) {
-        return String.valueOf(Math.ceil((fahrenheit - 273.15)));
-    }
-
-    private void showTime (){
-        Handler handler = new Handler();
-        new Timer().schedule(new TimerTask() {
-            @Override
-            public void run() {
-                handler.post(() -> tv_time.setText(timeService.getTime()));
-
-            }
-        } , 0 , 1000);
-    }
-
-    private boolean networkIsconnect(){
-        tempService.updatedTemp(name);
-        return false ;
-    }
-
     @RequiresApi(api = Build.VERSION_CODES.N)
-    private void check(){
-        recyclerViewOnItemClick = (view, Position) ->     getSupportFragmentManager().beginTransaction()
-                .add(R.id.fl_main, new showDetailFragment()).setCustomAnimations(R.anim.enter , R.anim.exit).addToBackStack("back").commit();
-
+    private void check() {
         realm = Realm.getDefaultInstance();
         realm.executeTransaction(realm -> city = realm.where(WeatherModel.class).findAll());
         if (city.size() != 0) {
-            city.forEach(weatherModel -> recyclerViewModels.add(new RecyclerViewModel(weatherModel.getName(), String.valueOf(weatherModel.getMain().getTemp()), weatherModel.getSys().getCountry())));
+            city.forEach(weatherModel -> recyclerViewModels.add(new RecyclerViewModel(weatherModel.getName(), String.valueOf(Math.ceil(weatherModel.getMain().getTemp() - 273.15)), weatherModel.getSys().getCountry())));
             city.forEach(weatherModel -> name.add(weatherModel.getName()));
         } else {
             Toast.makeText(this, "your db is empty", Toast.LENGTH_SHORT).show();
         }
         Collections.reverse(recyclerViewModels);
-        recycleViewAdapter = new RecycleViewAdapter(recyclerViewModels, getApplicationContext() ,recyclerViewOnItemClick);
-        layoutManager = new LinearLayoutManager(getApplicationContext());
+        Collections.reverse(name);
+        recyclerViewOnItemClick = (view, Position) -> {
+                pb_main.setVisibility(View.VISIBLE);
+                WeatherApi weatherApi = RetrofitBuilder.getRetrofit().create(WeatherApi.class);
+                Observable<WeatherModel> weatherModelObservable = weatherApi.WEATHER_MODEL_OBSERVABLE(name.get(Position));
+                weatherModelObservable.observeOn(AndroidSchedulers.mainThread())
+                        .subscribeOn(Schedulers.io())
+                        .subscribe(new Observer<WeatherModel>() {
+                            @Override
+                            public void onSubscribe(Disposable d) {
+                            }
+
+                            @RequiresApi(api = Build.VERSION_CODES.N)
+                            @Override
+                            public void onNext(WeatherModel weatherModel) {
+                                pb_main.setVisibility(View.INVISIBLE);
+                                showDetailFragment showDetailFragment = new showDetailFragment();
+                                Bundle bundle = new Bundle();
+                                bundle.putString("cityName" , weatherModel.getName());
+                                bundle.putString("temp" , String.valueOf(Math.ceil(weatherModel.getMain().getTemp() - 273.15)));
+                                bundle.putString("wind" , String.valueOf(weatherModel.getWind().getSpeed()));
+                                bundle.putString("humidity" , String.valueOf(weatherModel.getMain().getHumidity()));
+                                bundle.putString("max" , String.valueOf(Math.ceil(weatherModel.getMain().getTempMax() - 273.15)));
+                                bundle.putString("description" , String.valueOf(weatherModel.getWeather().get(0).getDescription()));
+                                showDetailFragment.setArguments(bundle);
+                                getSupportFragmentManager()
+                                        .beginTransaction()
+                                        .replace(R.id.fl_main ,showDetailFragment)
+                                        .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
+                                        .addToBackStack("back")
+                                        .commit();
+                            }
+
+                            @Override
+                            public void onError(Throwable e) {
+                                pb_main.setVisibility(View.INVISIBLE);
+                                Toast.makeText(getApplicationContext(), e.getMessage().toString(), Toast.LENGTH_SHORT).show();
+                            }
+
+                            @Override
+                            public void onComplete() {
+                                pb_main.setVisibility(View.INVISIBLE);
+                            }
+
+                        });
+        };
+        recycleViewAdapter = new RecycleViewAdapter(recyclerViewModels, getApplicationContext(), recyclerViewOnItemClick);
+        layoutManager = new LinearLayoutManager(getApplicationContext()) ;
         rv_showTemp.setHasFixedSize(true);
         rv_showTemp.setLayoutManager(layoutManager);
         rv_showTemp.setAdapter(recycleViewAdapter);
+//        Collections.reverse(recyclerViewModels);
+//        Collections.reverse(name);
+        itemTouchHelper = new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(0  ,ItemTouchHelper.LEFT) {
+            @Override
+            public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
+                return false;
+            }
+
+            @Override
+            public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
+                int position  = viewHolder.getAdapterPosition();
+                name.remove(position);
+                recyclerViewModels.remove(position);
+                recycleViewAdapter.notifyDataSetChanged();
+                realm.executeTransaction(realm -> {
+                    RealmResults< WeatherModel> realmResults  =  realm.where(WeatherModel.class ).findAll() ;
+                  realmResults.deleteFromRealm(position);
+                });
+
+            }
+        });
+        itemTouchHelper.attachToRecyclerView(rv_showTemp);
 
     }
+
+    private void checkInternet (){
+//            registerReceiver(internetConnection , new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
+        ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        if ( connectivityManager.getActiveNetworkInfo() != null && connectivityManager.
+                getActiveNetworkInfo().isConnected() )
+        {
+            connectionToServer(act_places.getText().toString());
+        }
+        else
+        {
+            internetDialog.startDialog();
+
+        }
+
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+//        unregisterReceiver(internetConnection);
+    }
+
 }
+
+
+
+
+
+
 

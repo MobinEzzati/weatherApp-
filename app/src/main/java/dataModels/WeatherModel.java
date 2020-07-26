@@ -58,6 +58,18 @@ public class WeatherModel extends RealmObject  {
     @Expose
     private Integer cod;
 
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+
+    @SerializedName("imageUr")
+    @Expose
+    private String imageUrl ;
+
     public Coord getCoord() {
         return coord;
     }
